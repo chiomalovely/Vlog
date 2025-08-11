@@ -3,9 +3,15 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Ima
 import { Settings, CreditCard as Edit, Users, Heart, Play, Bookmark, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useAuthStore } from '@/store/authStore';
+import { useVideoStore } from '@/store/videoStore';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+  const { videos } = useVideoStore();
   const [activeTab, setActiveTab] = useState<'videos' | 'saved' | 'earnings'>('videos');
 
   const styles = StyleSheet.create({
@@ -226,49 +232,49 @@ export default function ProfileScreen() {
     },
   });
 
-  const userProfile = {
-    username: 'creativemind',
-    fullName: 'Alex Johnson',
-    bio: 'Content creator sharing travel, food, and lifestyle moments ✨\nLiving life one adventure at a time 🌍',
-    joinDate: 'Joined March 2024',
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=200',
-    followers: 45600,
-    following: 1234,
-    videos: 89,
-    likes: 892000,
-  };
+  // Get user's videos
+  const userVideos = videos.filter(video => video.username === user?.username);
+  const savedVideos = videos.filter(video => video.isBookmarked);
 
-  const userVideos = [
-    {
-      id: '1',
-      title: 'Amazing Sunset at the Beach',
-      views: 15600,
-      thumbnail: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-    {
-      id: '2',
-      title: 'Best Coffee Shop in Town',
-      views: 8900,
-      thumbnail: 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-    {
-      id: '3',
-      title: 'Mountain Hiking Adventure',
-      views: 23400,
-      thumbnail: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-    {
-      id: '4',
-      title: 'Cooking My Favorite Recipe',
-      views: 12300,
-      thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-    },
-  ];
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+
+  const handleSettings = () => {
+    Alert.alert(
+      'Settings',
+      'Choose an option',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Edit Profile', onPress: () => console.log('Edit Profile') },
+        { text: 'Logout', onPress: handleLogout, style: 'destructive' },
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            router.replace('/welcome');
+          }
+        },
+      ]
+    );
+  };
+
+  const handleVideoPress = (videoId: string) => {
+    router.push(`/video/${videoId}`);
   };
 
   const renderTabContent = () => {
@@ -277,7 +283,11 @@ export default function ProfileScreen() {
         return (
           <View style={styles.videoGrid}>
             {userVideos.map((video) => (
-              <TouchableOpacity key={video.id} style={styles.videoItem}>
+              <TouchableOpacity 
+                key={video.id} 
+                style={styles.videoItem}
+                onPress={() => handleVideoPress(video.id)}
+              >
                 <Image source={{ uri: video.thumbnail }} style={styles.videoThumbnail} />
                 <View style={styles.videoOverlay}>
                   <Text style={styles.videoTitle}>{video.title}</Text>
@@ -289,7 +299,7 @@ export default function ProfileScreen() {
         );
       
       case 'saved':
-        return (
+        return savedVideos.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Bookmark size={48} color={colors.textSecondary} />
@@ -298,6 +308,22 @@ export default function ProfileScreen() {
             <Text style={styles.emptyDescription}>
               Videos you bookmark will appear here
             </Text>
+          </View>
+        ) : (
+          <View style={styles.videoGrid}>
+            {savedVideos.map((video) => (
+              <TouchableOpacity 
+                key={video.id} 
+                style={styles.videoItem}
+                onPress={() => handleVideoPress(video.id)}
+              >
+                <Image source={{ uri: video.thumbnail }} style={styles.videoThumbnail} />
+                <View style={styles.videoOverlay}>
+                  <Text style={styles.videoTitle}>{video.title}</Text>
+                  <Text style={styles.videoViews}>{formatNumber(video.views)} views</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         );
       
@@ -330,35 +356,35 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>@{userProfile.username}</Text>
-        <TouchableOpacity style={styles.settingsButton}>
+        <Text style={styles.headerTitle}>@{user?.username}</Text>
+        <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
           <Settings size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={{ flex: 1 }}>
         <View style={styles.profileInfo}>
-          <Image source={{ uri: userProfile.avatar }} style={styles.avatar} />
-          <Text style={styles.username}>@{userProfile.username}</Text>
-          <Text style={styles.fullName}>{userProfile.fullName}</Text>
-          <Text style={styles.bio}>{userProfile.bio}</Text>
-          <Text style={styles.joinDate}>{userProfile.joinDate}</Text>
+          <Image source={{ uri: user?.avatar }} style={styles.avatar} />
+          <Text style={styles.username}>@{user?.username}</Text>
+          <Text style={styles.fullName}>{user?.fullName}</Text>
+          <Text style={styles.bio}>{user?.bio}</Text>
+          <Text style={styles.joinDate}>Joined March 2024</Text>
 
           <View style={styles.stats}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{formatNumber(userProfile.followers)}</Text>
+              <Text style={styles.statNumber}>{formatNumber(user?.followers || 0)}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{formatNumber(userProfile.following)}</Text>
+              <Text style={styles.statNumber}>{formatNumber(user?.following || 0)}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userProfile.videos}</Text>
+              <Text style={styles.statNumber}>{userVideos.length}</Text>
               <Text style={styles.statLabel}>Videos</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{formatNumber(userProfile.likes)}</Text>
+              <Text style={styles.statNumber}>{formatNumber(userVideos.reduce((sum, video) => sum + video.likes, 0))}</Text>
               <Text style={styles.statLabel}>Likes</Text>
             </View>
           </View>

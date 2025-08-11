@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Heart, MessageCircle, Share, Play } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useVideoStore } from '@/store/videoStore';
 
 interface VideoCardProps {
   title: string;
@@ -26,6 +27,10 @@ export default function VideoCard({
   onPress
 }: VideoCardProps) {
   const { colors } = useTheme();
+  const { likeVideo, videos } = useVideoStore();
+  
+  // Find the current video to get its like status
+  const currentVideo = videos.find(v => v.username === username && v.title === title);
 
   const styles = StyleSheet.create({
     container: {
@@ -121,6 +126,19 @@ export default function VideoCard({
     return num.toString();
   };
 
+  const handleLike = (e: any) => {
+    e.stopPropagation(); // Prevent video navigation
+    if (currentVideo) {
+      likeVideo(currentVideo.id);
+    }
+  };
+
+  const handleShare = (e: any) => {
+    e.stopPropagation();
+    // Implement share functionality
+    console.log('Sharing video');
+  };
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
       <View style={styles.thumbnailContainer}>
@@ -141,17 +159,21 @@ export default function VideoCard({
           <Text style={styles.views}>{formatNumber(views)} views</Text>
           
           <View style={{ flexDirection: 'row', gap: Spacing.md }}>
-            <View style={styles.statItem}>
-              <Heart size={16} color={colors.textSecondary} />
+            <TouchableOpacity style={styles.statItem} onPress={handleLike}>
+              <Heart 
+                size={16} 
+                color={currentVideo?.isLiked ? colors.error : colors.textSecondary}
+                fill={currentVideo?.isLiked ? colors.error : 'none'}
+              />
               <Text style={styles.statText}>{formatNumber(likes)}</Text>
-            </View>
+            </TouchableOpacity>
             
             <View style={styles.statItem}>
               <MessageCircle size={16} color={colors.textSecondary} />
               <Text style={styles.statText}>{formatNumber(comments)}</Text>
             </View>
             
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleShare}>
               <Share size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>

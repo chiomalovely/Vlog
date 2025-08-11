@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Scro
 import { Search, MessageCircle, Users, Plus, CreditCard as Edit } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useRouter } from 'expo-router';
 
 interface ChatItem {
   id: string;
@@ -16,6 +17,7 @@ interface ChatItem {
 
 export default function ChatScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
   const styles = StyleSheet.create({
@@ -203,8 +205,7 @@ export default function ChatScreen() {
   );
 
   const handleChatPress = (chatId: string) => {
-    console.log('Opening chat:', chatId);
-    // Navigation to chat room would go here
+    router.push(`/chat/${chatId}`);
   };
 
   const handleNewChat = () => {
