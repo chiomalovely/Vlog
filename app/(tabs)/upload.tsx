@@ -3,13 +3,21 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Aler
 import { Camera, Image, Video, Upload, Hash, Type } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import { useVideoStore } from '@/store/videoStore';
+import { useAuthStore } from '@/store/authStore';
 
 export default function UploadScreen() {
   const { colors } = useTheme();
+  const { addVideo } = useVideoStore();
+  const { user } = useAuthStore();
   const [videoType, setVideoType] = useState<'short' | 'long'>('short');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [hashtags, setHashtags] = useState('');
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -142,27 +150,98 @@ export default function UploadScreen() {
   });
 
   const handleRecordVideo = () => {
-    Alert.alert('Camera', 'Opening camera to record video...');
+    Alert.alert(
+      'Record Video',
+      'Choose recording option',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Camera', onPress: openCamera },
+        { text: 'Gallery', onPress: openGallery },
+      ]
+    );
+  };
+
+  const openCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera permission is required to record videos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+      videoMaxDuration: videoType === 'short' ? 240 : 36000, // 4 minutes or 10 hours
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedVideo(result.assets[0].uri);
+    }
+  };
+
+  const openGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Media library permission is required to select videos');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedVideo(result.assets[0].uri);
+    }
   };
 
   const handleSelectFromGallery = () => {
-    Alert.alert('Gallery', 'Opening gallery to select video...');
+    openGallery();
   };
 
   const handlePublish = () => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a title for your video');
+    if (!title.trim() || !selectedVideo) {
+      Alert.alert('Error', 'Please select a video and enter a title');
       return;
     }
     
-    Alert.alert('Success', 'Video uploaded successfully!');
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setHashtags('');
+    setIsUploading(true);
+    
+    // Simulate upload process
+    setTimeout(() => {
+      const hashtagArray = hashtags
+        .split(' ')
+        .filter(tag => tag.startsWith('#'))
+        .slice(0, 10); // Limit to 10 hashtags
+
+      addVideo({
+        title: title.trim(),
+        username: user?.username || 'user',
+        views: 0,
+        likes: 0,
+        comments: 0,
+        thumbnail: 'https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800',
+        videoUrl: selectedVideo,
+        duration: videoType === 'short' ? '2:30' : '8:45',
+        description: description.trim(),
+        hashtags: hashtagArray.length > 0 ? hashtagArray : undefined,
+      });
+
+      setIsUploading(false);
+      Alert.alert('Success', 'Video uploaded successfully!');
+      
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setHashtags('');
+      setSelectedVideo(null);
+    }, 2000);
   };
 
-  const isFormValid = title.trim().length > 0;
+  const isFormValid = title.trim().length > 0 && selectedVideo !== null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -205,6 +284,16 @@ export default function UploadScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Video</Text>
+            {selectedVideo && (
+              <Text style={{ 
+                fontSize: Typography.fontSize.sm, 
+                color: colors.primary, 
+                marginBottom: Spacing.sm,
+                textAlign: 'center' 
+              }}>
+                ✓ Video selected
+              </Text>
+            )}
             <View style={styles.uploadOptions}>
               <TouchableOpacity style={styles.uploadButton} onPress={handleRecordVideo}>
                 <Camera size={32} color={colors.primary} />
@@ -257,11 +346,13 @@ export default function UploadScreen() {
           <TouchableOpacity
             style={[styles.publishButton, !isFormValid && styles.disabledButton]}
             onPress={handlePublish}
-            disabled={!isFormValid}
+            disabled={!isFormValid || isUploading}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
               <Upload size={20} color="#FFFFFF" />
-              <Text style={styles.publishButtonText}>Publish Video</Text>
+              <Text style={styles.publishButtonText}>
+                {isUploading ? 'Publishing...' : 'Publish Video'}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>

@@ -1,19 +1,22 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Index() {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Check if user is authenticated
     const checkAuth = async () => {
-      // For now, always redirect to welcome screen
-      // In a real app, you'd check authentication status here
-      router.replace('/welcome');
+      if (isAuthenticated) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/welcome');
+      }
     };
 
     checkAuth();
-  }, []);
+  }, [isAuthenticated]);
 
   return null;
 }

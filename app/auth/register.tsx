@@ -4,10 +4,12 @@ import { User, Mail, Lock, Eye, EyeOff, ArrowLeft, AtSign, Phone } from 'lucide-
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useAuthStore } from '@/store/authStore';
 
 export default function RegisterScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { register, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
@@ -18,7 +20,6 @@ export default function RegisterScreen() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -204,22 +205,21 @@ export default function RegisterScreen() {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Simulate registration API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      Alert.alert(
-        'Success!', 
-        'Your account has been created successfully!',
-        [
-          { text: 'OK', onPress: () => router.replace('/(tabs)') }
-        ]
-      );
+      const success = await register(formData);
+      if (success) {
+        Alert.alert(
+          'Success!', 
+          'Your account has been created successfully!',
+          [
+            { text: 'OK', onPress: () => router.replace('/(tabs)') }
+          ]
+        );
+      } else {
+        Alert.alert('Error', 'Registration failed. Please try again.');
+      }
     } catch (error) {
       Alert.alert('Error', 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
 

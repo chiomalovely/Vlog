@@ -3,10 +3,15 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } fr
 import { Bell, Zap } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useVideoStore } from '@/store/videoStore';
+import { useRouter } from 'expo-router';
 import VideoCard from '@/components/VideoCard';
+import AdBanner from '@/components/AdBanner';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
+  const { videos, isLoading } = useVideoStore();
   const [activeTab, setActiveTab] = useState<'following' | 'for-you'>('for-you');
 
   const styles = StyleSheet.create({
@@ -69,53 +74,9 @@ export default function HomeScreen() {
     },
   });
 
-  // Mock data - replace with real data from your backend
-  const videos = [
-    {
-      id: '1',
-      title: 'Amazing Travel Adventure in Bali - You Won\'t Believe What Happened!',
-      username: 'traveljunkie',
-      views: 125000,
-      likes: 8500,
-      comments: 342,
-      thumbnail: 'https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=800',
-      duration: '3:45',
-    },
-    {
-      id: '2',
-      title: 'Cooking the Perfect Pasta - Chef\'s Secret Recipe',
-      username: 'kitchenmaster',
-      views: 89000,
-      likes: 6200,
-      comments: 189,
-      thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800',
-      duration: '2:18',
-    },
-    {
-      id: '3',
-      title: 'Mind-Blowing Magic Tricks That Will Amaze You',
-      username: 'magicwizard',
-      views: 234000,
-      likes: 15600,
-      comments: 891,
-      thumbnail: 'https://images.pexels.com/photos/6941/music-bokeh-lights-party.jpg?auto=compress&cs=tinysrgb&w=800',
-      duration: '4:02',
-    },
-    {
-      id: '4',
-      title: 'Epic Workout Routine - Get Fit in 30 Days',
-      username: 'fitnessqueen',
-      views: 67000,
-      likes: 4300,
-      comments: 156,
-      thumbnail: 'https://images.pexels.com/photos/416778/pexels-photo-416778.jpeg?auto=compress&cs=tinysrgb&w=800',
-      duration: '8:15',
-    },
-  ];
 
   const handleVideoPress = (videoId: string) => {
-    // Navigate to video watch screen
-    console.log('Opening video:', videoId);
+    router.push(`/video/${videoId}`);
   };
 
   return (
@@ -151,6 +112,8 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+        <AdBanner size="banner" />
+        
         {videos.map((video) => (
           <VideoCard
             key={video.id}
@@ -164,6 +127,8 @@ export default function HomeScreen() {
             onPress={() => handleVideoPress(video.id)}
           />
         ))}
+        
+        <AdBanner size="mediumRectangle" />
       </ScrollView>
     </SafeAreaView>
   );

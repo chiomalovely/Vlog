@@ -4,14 +4,15 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
 import { Spacing, Typography } from '@/constants/Colors';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { login, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -170,17 +171,15 @@ export default function LoginScreen() {
       return;
     }
 
-    setIsLoading(true);
     try {
-      // Simulate login API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Navigate to main app
-      router.replace('/(tabs)');
+      const success = await login(email, password);
+      if (success) {
+        router.replace('/(tabs)');
+      } else {
+        Alert.alert('Error', 'Invalid email or password');
+      }
     } catch (error) {
       Alert.alert('Error', 'Invalid email or password');
-    } finally {
-      setIsLoading(false);
     }
   };
 
