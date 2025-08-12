@@ -6,12 +6,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useVideoStore } from '@/store/videoStore';
 import { Spacing, Typography } from '@/constants/Colors';
 import VideoPlayer from '@/components/VideoPlayer';
+import RewardedVideoAd from '@/components/RewardedVideoAd';
 
 export default function VideoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors } = useTheme();
   const { videos, likeVideo, bookmarkVideo } = useVideoStore();
+  const [showRewardedAd, setShowRewardedAd] = useState(true);
 
   const video = videos.find(v => v.id === id);
 
@@ -155,8 +157,23 @@ export default function VideoScreen() {
     console.log('Sharing video:', video.id);
   };
 
+  const handleAdClosed = () => {
+    setShowRewardedAd(false);
+  };
+
+  const handleAdRewarded = () => {
+    console.log('User watched rewarded ad');
+    // You can add rewards logic here if needed
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <RewardedVideoAd
+        isVisible={showRewardedAd}
+        onAdClosed={handleAdClosed}
+        onAdRewarded={handleAdRewarded}
+      />
+      
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color={colors.text} />
@@ -166,7 +183,11 @@ export default function VideoScreen() {
 
       <ScrollView style={styles.content}>
         <View style={styles.videoContainer}>
-          <VideoPlayer videoUrl={video.videoUrl} autoPlay={true} />
+          <VideoPlayer 
+            videoUrl={video.videoUrl} 
+            autoPlay={!showRewardedAd} 
+            showControls={!showRewardedAd}
+          />
           
           <View style={styles.videoInfo}>
             <Text style={styles.title}>{video.title}</Text>

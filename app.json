@@ -36,7 +36,14 @@
       "expo-camera",
       "expo-image-picker",
       "expo-media-library",
-      "expo-av"
+      "expo-av",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "android_app_id": "ca-app-pub-3525464829772650~3611777643",
+          "ios_app_id": "ca-app-pub-3525464829772650~3611777643"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

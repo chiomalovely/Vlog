@@ -7,6 +7,7 @@ import { useVideoStore } from '@/store/videoStore';
 import { useRouter } from 'expo-router';
 import VideoCard from '@/components/VideoCard';
 import AdBanner from '@/components/AdBanner';
+import NativeAdComponent from '@/components/NativeAd';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -112,23 +113,26 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        <AdBanner size="banner" />
+        <NativeAdComponent />
         
-        {videos.map((video) => (
-          <VideoCard
-            key={video.id}
-            title={video.title}
-            username={video.username}
-            views={video.views}
-            likes={video.likes}
-            comments={video.comments}
-            thumbnail={video.thumbnail}
-            duration={video.duration}
-            onPress={() => handleVideoPress(video.id)}
-          />
+        {videos.map((video, index) => (
+          <React.Fragment key={video.id}>
+            <VideoCard
+              title={video.title}
+              username={video.username}
+              views={video.views}
+              likes={video.likes}
+              comments={video.comments}
+              thumbnail={video.thumbnail}
+              duration={video.duration}
+              onPress={() => handleVideoPress(video.id)}
+            />
+            {/* Show native ad after every 3 videos */}
+            {(index + 1) % 3 === 0 && <NativeAdComponent />}
+          </React.Fragment>
         ))}
         
-        <AdBanner size="mediumRectangle" />
+        <NativeAdComponent />
       </ScrollView>
     </SafeAreaView>
   );

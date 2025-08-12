@@ -5,6 +5,7 @@ import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_7
 import * as SplashScreen from 'expo-splash-screen';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useVideoStore } from '@/store/videoStore';
+import { initializeAdMob } from '@/components/AdMobConfig';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +26,8 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
       // Load initial video data
       loadVideos();
+      // Initialize AdMob
+      initializeAdMob();
     }
   }, [fontsLoaded, fontError]);
 

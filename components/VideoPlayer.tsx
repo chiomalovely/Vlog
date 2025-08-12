@@ -26,6 +26,7 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [showControlsOverlay, setShowControlsOverlay] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDisabled, setIsDisabled] = useState(!showControls);
 
   const styles = StyleSheet.create({
     container: {
@@ -78,9 +79,31 @@ export default function VideoPlayer({
       fontFamily: Typography.fontFamily.medium,
       marginTop: Spacing.sm,
     },
+    disabledOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    disabledText: {
+      color: '#FFFFFF',
+      fontSize: Typography.fontSize.md,
+      fontFamily: Typography.fontFamily.medium,
+      textAlign: 'center',
+    },
   });
 
+  useEffect(() => {
+    setIsDisabled(!showControls);
+  }, [showControls]);
+
   const handlePlayPause = async () => {
+    if (isDisabled) return;
+    
     if (videoRef.current) {
       if (isPlaying) {
         await videoRef.current.pauseAsync();
@@ -92,6 +115,8 @@ export default function VideoPlayer({
   };
 
   const handleMuteToggle = async () => {
+    if (isDisabled) return;
+    
     if (videoRef.current) {
       await videoRef.current.setIsMutedAsync(!isMuted);
       setIsMuted(!isMuted);
@@ -99,6 +124,8 @@ export default function VideoPlayer({
   };
 
   const handleVideoPress = () => {
+    if (isDisabled) return;
+    
     if (showControls) {
       setShowControlsOverlay(!showControlsOverlay);
     }
@@ -113,19 +140,32 @@ export default function VideoPlayer({
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={handleVideoPress} activeOpacity={0.9}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={handleVideoPress} 
+      activeOpacity={isDisabled ? 1 : 0.9}
+      disabled={isDisabled}
+    >
       <Video
         ref={videoRef}
         style={styles.video}
         source={{ uri: videoUrl }}
         useNativeControls={false}
         resizeMode={ResizeMode.COVER}
-        shouldPlay={isPlaying}
+        shouldPlay={isPlaying && !isDisabled}
         isLooping
         isMuted={isMuted}
         onLoadStart={handleLoadStart}
         onLoad={handleLoad}
       />
+      
+      {isDisabled && (
+        <View style={styles.disabledOverlay}>
+          <Text style={styles.disabledText}>
+            Please wait for the ad to finish...
+          </Text>
+        </View>
+      )}
       
       {(showControlsOverlay || isLoading) && showControls && (
         <View style={styles.controlsOverlay}>
